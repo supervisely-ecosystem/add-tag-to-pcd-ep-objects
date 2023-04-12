@@ -41,13 +41,13 @@ new_tag_meta = sly.TagMeta(
 )
 
 
-exist_tag_meta = project_tag_metas.get(new_tag_meta.name)
-if exist_tag_meta is None:
+existing_tag_meta = project_tag_metas.get(new_tag_meta.name)
+if existing_tag_meta is None:
     new_tags_collection = project_tag_metas.add(new_tag_meta)
     new_project_meta = sly.ProjectMeta(tag_metas=new_tags_collection, obj_classes=project_classes)
     api.project.update_meta(PROJECT_ID, new_project_meta)
 else:
-    new_tag_meta = exist_tag_meta
+    new_tag_meta = existing_tag_meta
 
 new_tag = sly.PointcloudEpisodeTag(
     meta=new_tag_meta,
