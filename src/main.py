@@ -15,7 +15,7 @@ load_dotenv(os.path.expanduser("~/supervisely_ce.env"))
 api = sly.Api.from_env()
 
 
-PROJECT_ID = sly.env.project_id(False)
+PROJECT_ID = sly.env.project_id()
 DATASET_ID = sly.env.dataset_id()
 
 PROJECT_META_JSON = api.project.get_meta(PROJECT_ID)
