@@ -47,7 +47,11 @@ code -r .
 
 Project classes after Demo initialization
 
-<img width="1280" alt="classes" src="https://user-images.githubusercontent.com/57998637/231228488-b0060662-a9ef-452d-b851-85f796ede2d7.png">
+<img width="1280" alt="classes" src="https://user-images.githubusercontent.com/57998637/231448142-edf8b36a-1699-4633-856c-440c7789e0f7.png">
+
+Project tags metadata after Demo initialization. This data is empty.
+
+<img width="1280" alt="empty_tags" src="https://user-images.githubusercontent.com/57998637/231447574-fc4002cc-3e0e-45e0-9a3c-e8c8ccd04db8.png">
 
 Visualization in Labeling Tool before we add tags
 
@@ -147,7 +151,7 @@ else:
 ```
 
 New tag metadatas added
-<img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231228479-6396c0f7-435f-44b0-862d-72e545210be1.png">
+<img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231448616-b81d7f51-bd37-40d8-9caa-87a9207e43b9.png">
 
 ### **Create new tag with value**
 
