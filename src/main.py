@@ -34,21 +34,18 @@ project_tag_metas = PROJECT_META.tag_metas
 
 
 new_tag_meta = sly.TagMeta(
-    "ItsTram",
+    "Tram",
     sly.TagValueType.ONEOF_STRING,
     applicable_to=sly.TagApplicableTo.OBJECTS_ONLY,
     possible_values=["city", "suburb"],
 )
 
 
-try:
+exist_tag_meta = project_tag_metas.get(new_tag_meta.name)
+if exist_tag_meta is None:
     new_tags_collection = project_tag_metas.add(new_tag_meta)
     new_project_meta = sly.ProjectMeta(tag_metas=new_tags_collection, obj_classes=project_classes)
     api.project.update_meta(PROJECT_ID, new_project_meta)
-except DuplicateKeyError:
-    sly.logger.warning(f"New tag ['{new_tag_meta.name}'] already exists in project metadata")
-    new_tag_meta = project_tag_metas.get(new_tag_meta.name)
-
 
 new_tag = sly.PointcloudEpisodeTag(
     meta=new_tag_meta,
