@@ -124,18 +124,16 @@ new_tag_meta = sly.TagMeta(
 )
 ```
 
-### **Update thesource project metadata with new tag metadata**
+### **Recreate the source project metadata with new tag metadata**
 
 If a tag metadata with the same name already exists in the project metadata, this step will be skipped.
 
 ```python
-try:
+exist_tag_meta = project_tag_metas.get(new_tag_meta.name)
+if exist_tag_meta is None:
     new_tags_collection = project_tag_metas.add(new_tag_meta)
     new_project_meta = sly.ProjectMeta(tag_metas=new_tags_collection, obj_classes=project_classes)
     api.project.update_meta(PROJECT_ID, new_project_meta)
-except DuplicateKeyError:
-    sly.logger.warning(f"New tag ['{new_tag_meta.name}'] already exists in project metadata")
-    new_tag_meta = project_tag_metas.get(new_tag_meta.name)
 ```
 
 ### **Create new tag with value**
@@ -163,6 +161,7 @@ new_tag = sly.PointcloudEpisodeTag(
 ### **Recreate all objects that meet the requirements**
 
 All objects that belong to the "Tram" class will be processed with a new tag.
+In this case, if you try to add tags to the source object using `object.add_tag`, you will receive a duplication error. That's why we recreate the object with only the new tags for further updating of annotations.
 
 ```python
 new_objects_list = []
