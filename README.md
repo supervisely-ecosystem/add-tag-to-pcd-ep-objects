@@ -2,7 +2,7 @@
 description: How to create and add tags to Point Cloud Episode annotation objects and frames
 ---
 
-# **Tags for annotation objects and frames**
+# **Tags on PCD Episodes annotation objects and frames**
 
 ## **Introduction**
 
