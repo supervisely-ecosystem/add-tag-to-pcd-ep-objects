@@ -43,7 +43,15 @@ code -r .
 
 **Step 4.** Get, for example, [Demo KITTI pointcloud episodes annotated](https://app.supervise.ly/ecosystem/projects/demo-kitti-3d-episodes-annotated) project from Ecosystem.
 
-<img src=https://user-images.githubusercontent.com/57998637/231194451-e8797293-0317-4168-a165-7bd59d5b72f3.gif width="1918">
+<img src=https://user-images.githubusercontent.com/57998637/231194451-e8797293-0317-4168-a165-7bd59d5b72f3.gif width="1280">
+
+Project classes after Demo initialization
+
+<img width="1280" alt="classes" src="https://user-images.githubusercontent.com/57998637/231228488-b0060662-a9ef-452d-b851-85f796ede2d7.png">
+
+Visualization in Labeling Tool before we add tags
+
+<img width="1280" alt="tool_before" src="https://user-images.githubusercontent.com/57998637/231228482-b8ef1445-b1f1-40ca-a58b-f2fcac7be822.png">
 
 **Step 5.** Change Workspace ID in `local.env` file by copying the ID from the context menu of the workspace. Do the same for Project ID and Dataset ID .
 
@@ -136,6 +144,9 @@ if exist_tag_meta is None:
     api.project.update_meta(PROJECT_ID, new_project_meta)
 ```
 
+New tag metadatas added
+<img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231228479-6396c0f7-435f-44b0-862d-72e545210be1.png">
+
 ### **Create new tag with value**
 
 You can create a tag using the previously created tag metadata, which can have a value and can be assigned to the defined frames. Once you have created the new tag, you can then create a tag Collection with the new tag. This will enable you to recreate certain Objects but with the new tag.
@@ -198,20 +209,6 @@ api.pointcloud_episode.tag.append_to_objects(
 )
 ```
 
-## **Visualization in 3D EPISODES LABELING TOOLBOX**
-
-### Project classes after Demo initialization
-
-<img width="1280" alt="classes" src="https://user-images.githubusercontent.com/57998637/231228488-b0060662-a9ef-452d-b851-85f796ede2d7.png">
-
-### Visualization in Labeling Tool before we add tags
-
-<img width="1280" alt="tool_before" src="https://user-images.githubusercontent.com/57998637/231228482-b8ef1445-b1f1-40ca-a58b-f2fcac7be822.png">
-
-### New tag metadatas added
-
-<img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231228479-6396c0f7-435f-44b0-862d-72e545210be1.png">
-
-### Visualization in Labeling Tool with new tags
+Visualization in Labeling Tool with new tags
 
 <img width="1280" alt="tool_after" src="https://user-images.githubusercontent.com/57998637/231228485-67d1f919-d5b5-4647-b7e4-e8389f0743b2.png">
