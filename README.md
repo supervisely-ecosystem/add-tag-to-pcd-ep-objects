@@ -43,7 +43,7 @@ code -r .
 
 **Step 4.** Get, for example, [Demo KITTI pointcloud episodes annotated](https://app.supervise.ly/ecosystem/projects/demo-kitti-3d-episodes-annotated) project from Ecosystem.
 
-<img src=https://user-images.githubusercontent.com/57998637/231194451-e8797293-0317-4168-a165-7bd59d5b72f3.gif width="1280">
+<img width="1280" src="https://user-images.githubusercontent.com/57998637/231194451-e8797293-0317-4168-a165-7bd59d5b72f3.gif">
 
 Project classes after Demo initialization
 
@@ -65,11 +65,11 @@ PROJECT_ID=239385  # ⬅️ change value
 DATASET_ID=774629  # ⬅️ change value
 ```
 
-<img src=https://user-images.githubusercontent.com/57998637/231221251-3dfc1a56-b851-4542-be5b-d82b2ef14176.gif width="600">
+<img  width="600" src="https://user-images.githubusercontent.com/57998637/231221251-3dfc1a56-b851-4542-be5b-d82b2ef14176.gif">
 
 **Step 6.** Start debugging `src/main.py`
 
-<img src=https://user-images.githubusercontent.com/57998637/231219726-f9aa48b3-4460-4523-8bb4-c62f57419c0d.gif width="1906">
+<img width="1280" src="https://user-images.githubusercontent.com/57998637/231476859-244b009d-a936-4be4-b662-c78e8bfc0fb9.gif">
 
 ## **Python Code**
 
@@ -79,12 +79,8 @@ DATASET_ID=774629  # ⬅️ change value
 import os
 import supervisely as sly
 from dotenv import load_dotenv
-from supervisely.collection.key_indexed_collection import DuplicateKeyError
 from supervisely.pointcloud_annotation.pointcloud_episode_tag_collection import (
     PointcloudEpisodeTagCollection,
-)
-from supervisely.pointcloud_annotation.pointcloud_object_collection import (
-    PointcloudObjectCollection,
 )
 ```
 
@@ -151,6 +147,7 @@ else:
 ```
 
 New tag metadatas added
+
 <img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231448616-b81d7f51-bd37-40d8-9caa-87a9207e43b9.png">
 
 ### **Create new tag with value**
