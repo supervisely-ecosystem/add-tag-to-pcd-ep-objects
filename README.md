@@ -1,12 +1,12 @@
 ---
-description: How to create and add tags to Point Cloud Episode objects and frames
+description: How to create and add tags to Point Cloud Episode annotation objects and frames
 ---
 
-# **Tags for objects and frames**
+# **Tags for annotation objects and frames**
 
 ## **Introduction**
 
-In this tutorial, you will learn how to create new tags and assign them to selected objects or frames (with these objects) in Point Cloud Episodes using the Supervisely SDK.
+In this tutorial, you will learn how to create new tags and assign them to selected annotation objects or frames (with these objects) in Point Cloud Episodes using the Supervisely SDK.
 
 Supervisely supports different types of tags:
 
@@ -27,7 +27,7 @@ Everything you need to reproduce [this tutorial is on GitHub](https://github.com
 
 **Step 1.** Prepare `~/supervisely.env` file with credentials. [Learn more here.](../basics-of-authentication.md#use-.env-file-recommended)
 
-**Step 2.** Clone [repository](https://github.com/supervisely-ecosystem/add-tag-to-pce-objects) with source code and demo data and create [Virtual Environment](https://docs.python.org/3/library/venv.html).
+**Step 2.** Clone [repository](https://github.com/supervisely-ecosystem/add-tag-to-pce-objects) with source code and create [Virtual Environment](https://docs.python.org/3/library/venv.html).
 
 ```bash
 git clone https://github.com/supervisely-ecosystem/add-tag-to-pce-objects
@@ -35,13 +35,13 @@ cd add-tag-to-pce-objects
 ./create_venv.sh
 ```
 
-**Step 3.** Open repository directory in Visual Studio Code.&#x20;
+**Step 3.** Open repository directory in Visual Studio Code.
 
 ```bash
 code -r .
 ```
 
-**Step 4.** Get [Demo KITTI pointcloud episodes annotated](https://app.supervise.ly/ecosystem/projects/demo-kitti-3d-episodes-annotated) project from Ecosystem:
+**Step 4.** Get, for example, [Demo KITTI pointcloud episodes annotated](https://app.supervise.ly/ecosystem/projects/demo-kitti-3d-episodes-annotated) project from Ecosystem.
 
 <img src=https://user-images.githubusercontent.com/57998637/231194451-e8797293-0317-4168-a165-7bd59d5b72f3.gif width="1918">
 
@@ -78,7 +78,7 @@ from supervisely.pointcloud_annotation.pointcloud_object_collection import (
 
 ### **Init API client**
 
-Init api for communicating with Supervisely Instance. First, we load environment variables with credentials, Workspace, Project and Dataset IDs:
+Init `api` for communicating with Supervisely Instance. First, we load environment variables with credentials, Project and Dataset IDs:
 
 ```python
 load_dotenv("local.env")
@@ -89,7 +89,7 @@ api = sly.Api.from_env()
 With next lines we will get values from `local.env`.
 
 ```python
-PROJECT_ID = sly.env.project_id(False)
+PROJECT_ID = sly.env.project_id()
 DATASET_ID = sly.env.dataset_id()
 ```
 
@@ -111,9 +111,9 @@ project_classes = PROJECT_META.obj_classes
 project_tag_metas = PROJECT_META.tag_metas
 ```
 
-### **Create new TagMeta**
+### **Create new tag metadata**
 
-To create a new Tag, you need to first define a TagMeta. This includes specifying the Tag name, type, the objects to which it can be added, and the possible values. This base information will be used to create the actual Tags.
+To create a new tag, you need to first define a tag metadata. This includes specifying the tag name, type, the objects to which it can be added, and the possible values. This base information will be used to create the actual tags.
 
 ```python
 new_tag_meta = sly.TagMeta(
@@ -124,9 +124,9 @@ new_tag_meta = sly.TagMeta(
 )
 ```
 
-### **Update current Project Meta with new TagMeta**
+### **Update thesource project metadata with new tag metadata**
 
-If a TagMeta with the same name already exists in the project metadata, this step will be skipped.
+If a tag metadata with the same name already exists in the project metadata, this step will be skipped.
 
 ```python
 try:
@@ -138,9 +138,9 @@ except DuplicateKeyError:
     new_tag_meta = project_tag_metas.get(new_tag_meta.name)
 ```
 
-### **Create new Tag with value**
+### **Create new tag with value**
 
-You can create a Tag using the previously created TagMeta, which can have a value and can be assigned to the defined frames. Once you have created the new Tag, you can then create a Tag Collection with the new Tag. This will enable you to recreate certain Objects but with the new Tag.
+You can create a tag using the previously created tag metadata, which can have a value and can be assigned to the defined frames. Once you have created the new tag, you can then create a tag Collection with the new tag. This will enable you to recreate certain Objects but with the new tag.
 
 ```python
 new_tag = sly.PointcloudEpisodeTag(
@@ -160,9 +160,9 @@ new_tag = sly.PointcloudEpisodeTag(
 )
 ```
 
-### **Recreate all Objects that meet the requirements**
+### **Recreate all objects that meet the requirements**
 
-All objects that belong to the "Tram" class will be processed with a new Tag.
+All objects that belong to the "Tram" class will be processed with a new tag.
 
 ```python
 new_objects_list = []
@@ -173,7 +173,7 @@ for object in pcd_ep_ann.objects:
         new_objects_list.append(new_obj)
 ```
 
-If you want to skip Objects that already have a particular Tag, you should retrieve all the Tags for that Object and check if the desired Tag already exists. If it does, then you can skip that Object and move on to the next one.
+If you want to skip objects that already have a particular tag, you should retrieve all the tags for that object and check if the desired tag already exists. If it does, then you can skip that object and move on to the next one.
 
 ```python
 for object in pcd_ep_ann.objects:
@@ -201,18 +201,18 @@ api.pointcloud_episode.tag.append_to_objects(
 
 ## **Visualization in 3D EPISODES LABELING TOOLBOX**
 
-### Project Classes after Demo initialization
+### Project classes after Demo initialization
 
 <img width="1280" alt="classes" src="https://user-images.githubusercontent.com/57998637/231228488-b0060662-a9ef-452d-b851-85f796ede2d7.png">
 
-### Visualization in Labeling Tool before we add Tags
+### Visualization in Labeling Tool before we add tags
 
 <img width="1280" alt="tool_before" src="https://user-images.githubusercontent.com/57998637/231228482-b8ef1445-b1f1-40ca-a58b-f2fcac7be822.png">
 
-### New Tags Metadata added
+### New tag metadatas added
 
 <img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231228479-6396c0f7-435f-44b0-862d-72e545210be1.png">
 
-### Visualization in Labeling Tool with new Tags
+### Visualization in Labeling Tool with new tags
 
 <img width="1280" alt="tool_after" src="https://user-images.githubusercontent.com/57998637/231228485-67d1f919-d5b5-4647-b7e4-e8389f0743b2.png">
