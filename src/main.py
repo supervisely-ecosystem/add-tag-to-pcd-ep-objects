@@ -11,7 +11,7 @@ from supervisely.pointcloud_annotation.pointcloud_object_collection import (
 
 
 load_dotenv("local.env")
-load_dotenv(os.path.expanduser("~/supervisely_ce.env"))
+load_dotenv(os.path.expanduser("~/supervisely.env"))
 api = sly.Api.from_env()
 
 
