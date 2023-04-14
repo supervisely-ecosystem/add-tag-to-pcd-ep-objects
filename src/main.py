@@ -1,70 +1,60 @@
 import os
 import supervisely as sly
 from dotenv import load_dotenv
-from supervisely.pointcloud_annotation.pointcloud_episode_tag_collection import (
-    PointcloudEpisodeTagCollection,
-)
-
 
 load_dotenv("local.env")
 load_dotenv(os.path.expanduser("~/supervisely.env"))
 api = sly.Api.from_env()
 
 
-PROJECT_ID = sly.env.project_id()
-DATASET_ID = sly.env.dataset_id()
+project_id = sly.env.project_id()
+dataset_id = sly.env.dataset_id()
 
-PROJECT_META_JSON = api.project.get_meta(PROJECT_ID)
-PROJECT_META = sly.ProjectMeta.from_json(data=PROJECT_META_JSON)
+project_meta_json = api.project.get_meta(project_id)
+project_meta = sly.ProjectMeta.from_json(data=project_meta_json)
 
 key_id_map = sly.KeyIdMap()
 
-pcd_entities = api.pointcloud_episode.get_list(DATASET_ID)
-pcd_entity_id = pcd_entities[0][0]  # first entity id
-pcd_ep_ann_json = api.pointcloud_episode.annotation.download(DATASET_ID)
-pcd_ep_ann = sly.PointcloudEpisodeAnnotation.from_json(
-    data=pcd_ep_ann_json, project_meta=PROJECT_META, key_id_map=key_id_map
-)
-project_classes = PROJECT_META.obj_classes
-project_tag_metas = PROJECT_META.tag_metas
+pcd_ep_ann_json = api.pointcloud_episode.annotation.download(dataset_id)
 
+tag_name = "Car"
+tag_values = ["car_1", "car_2"]
 
-new_tag_meta = sly.TagMeta(
-    "Tram",
-    sly.TagValueType.ONEOF_STRING,
-    applicable_to=sly.TagApplicableTo.OBJECTS_ONLY,
-    possible_values=["city", "suburb"],
-)
-
-
-existing_tag_meta = project_tag_metas.get(new_tag_meta.name)
-if existing_tag_meta is None:
-    new_tags_collection = project_tag_metas.add(new_tag_meta)
-    new_project_meta = sly.ProjectMeta(tag_metas=new_tags_collection, obj_classes=project_classes)
-    api.project.update_meta(PROJECT_ID, new_project_meta)
+if not project_meta.tag_metas.has_key(tag_name):
+    new_tag_meta = sly.TagMeta(
+        tag_name,
+        sly.TagValueType.ONEOF_STRING,
+        applicable_to=sly.TagApplicableTo.OBJECTS_ONLY,
+        possible_values=tag_values,
+    )
+    new_tags_collection = project_meta.tag_metas.add(new_tag_meta)
+    new_project_meta = sly.ProjectMeta(
+        tag_metas=new_tags_collection, obj_classes=project_meta.obj_classes
+    )
+    api.project.update_meta(project_id, new_project_meta)
+    new_prject_meta_json = api.project.get_meta(project_id)
+    new_project_meta = sly.ProjectMeta.from_json(data=new_prject_meta_json)
+    new_tag_meta = new_project_meta.tag_metas.get(new_tag_meta.name)
 else:
-    new_tag_meta = existing_tag_meta
+    new_tag_meta = project_meta.tag_metas.get(tag_name)
+    if sorted(new_tag_meta.possible_values) != sorted(tag_values):
+        sly.logger.warning(
+            f"Tag [{new_tag_meta.name}] already exists, but with another values: {new_tag_meta.possible_values}"
+        )
 
-new_tag = sly.PointcloudEpisodeTag(
-    meta=new_tag_meta,
-    value="suburb",
-    # frame_range=[12, 13],  # in case you want to add tag to frames
-)
-new_tag_collection = PointcloudEpisodeTagCollection([new_tag])
+project_objects = pcd_ep_ann_json.get("objects")
+tag_frames = [0, 26]
+created_tag_ids = {}
 
-new_objects_list = []
-for object in pcd_ep_ann.objects:
-    # object_tags = object.tags.items() # in case you want to filter objects with the same tag
-    # has_this_tag = any(tag.name == new_tag.name for tag in object_tags) # in case you want to filter objects with the same tag
-    if object.obj_class.name == "Tram":
-        new_obj = object.clone(tags=new_tag_collection)
-        new_objects_list.append(new_obj)
+for object in project_objects:
+    if object["classTitle"] == "Car":
+        tag_id = api.pointcloud_episode.object.tag.add(
+            new_tag_meta.sly_id, object["id"], value="car_1", frame_range=tag_frames
+        )
+        created_tag_ids[object["id"]] = tag_id
 
-new_pcd_ann = pcd_ep_ann.clone(objects=new_objects_list)
+tag_id_to_operate = created_tag_ids.get(project_objects[0]["id"])
 
-api.pointcloud_episode.tag.append_to_objects(
-    entity_id=pcd_entity_id,
-    project_id=PROJECT_ID,
-    objects=new_pcd_ann.objects,
-    key_id_map=key_id_map,
-)
+api.pointcloud_episode.object.tag.update(tag_id_to_operate, "car_2")
+
+api.pointcloud_episode.object.tag.remove(tag_id_to_operate)
