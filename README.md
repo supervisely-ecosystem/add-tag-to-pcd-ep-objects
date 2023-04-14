@@ -6,7 +6,7 @@ description: How to create and add tags to Point Cloud Episode annotation object
 
 ## **Introduction**
 
-In this tutorial, you will learn how to create new tags and assign them to selected annotation objects or frames (with these objects) in Point Cloud Episodes using the Supervisely SDK.
+In this tutorial, you will learn how to create new tags and assign them, update its values or remove tags for selected annotation objects or frames (with these objects) in Point Cloud Episodes using the Supervisely SDK.
 
 Supervisely supports different types of tags:
 
@@ -14,6 +14,12 @@ Supervisely supports different types of tags:
 - ANY_NUMBER
 - ANY_STRING
 - ONEOF_STRING
+
+And could be applied to:
+
+- ALL
+- IMAGES_ONLY - PCD in our case
+- OBJECTS_ONLY
 
 You can find all the information about those types in the [Tags in Annotations](https://developer.supervise.ly/api-references/supervisely-annotation-json-format/tags) section and [SDK](https://supervisely.readthedocs.io/en/latest/sdk/supervisely.annotation.tag_meta.TagMeta.html) documentation.
 
@@ -27,11 +33,11 @@ Everything you need to reproduce [this tutorial is on GitHub](https://github.com
 
 **Step 1.** Prepare `~/supervisely.env` file with credentials. [Learn more here.](../basics-of-authentication.md#use-.env-file-recommended)
 
-**Step 2.** Clone [repository](https://github.com/supervisely-ecosystem/add-tag-to-pce-objects) with source code and create [Virtual Environment](https://docs.python.org/3/library/venv.html).
+**Step 2.** Clone [repository](https://github.com/supervisely-ecosystem/how-to-work-with-pce-object-tags) with source code and create [Virtual Environment](https://docs.python.org/3/library/venv.html).
 
 ```bash
-git clone https://github.com/supervisely-ecosystem/add-tag-to-pce-objects
-cd add-tag-to-pce-objects
+git clone https://github.com/supervisely-ecosystem/how-to-work-with-pce-object-tags
+cd how-to-work-with-pce-object-tags
 ./create_venv.sh
 ```
 
@@ -45,7 +51,7 @@ code -r .
 
 <img width="1280" src="https://user-images.githubusercontent.com/57998637/231194451-e8797293-0317-4168-a165-7bd59d5b72f3.gif">
 
-Project classes after Demo initialization
+There you see project classes after Demo initialization
 
 <img width="1280" alt="classes" src="https://user-images.githubusercontent.com/57998637/231448142-edf8b36a-1699-4633-856c-440c7789e0f7.png">
 
@@ -55,7 +61,7 @@ Project tags metadata after Demo initialization. This data is empty.
 
 Visualization in Labeling Tool before we add tags
 
-<img width="1280" alt="tool_before" src="https://user-images.githubusercontent.com/57998637/231228482-b8ef1445-b1f1-40ca-a58b-f2fcac7be822.png">
+<img width="1280" alt="initial" src="https://user-images.githubusercontent.com/57998637/232045216-93e52991-4ee4-46a8-8d06-50d47042b18f.png">
 
 **Step 5.** Change Workspace ID in `local.env` file by copying the ID from the context menu of the workspace. Do the same for Project ID and Dataset ID .
 
@@ -69,7 +75,7 @@ DATASET_ID=774629  # ⬅️ change value
 
 **Step 6.** Start debugging `src/main.py`
 
-<img width="1280" src="https://user-images.githubusercontent.com/57998637/231476859-244b009d-a936-4be4-b662-c78e8bfc0fb9.gif">
+<img width="1280" src="https://user-images.githubusercontent.com/57998637/232045498-33bf1d2a-eb07-40c1-8319-9b2197e92c1a.gif">
 
 ## **Python Code**
 
@@ -79,9 +85,6 @@ DATASET_ID=774629  # ⬅️ change value
 import os
 import supervisely as sly
 from dotenv import load_dotenv
-from supervisely.pointcloud_annotation.pointcloud_episode_tag_collection import (
-    PointcloudEpisodeTagCollection,
-)
 ```
 
 ### **Init API client**
@@ -97,26 +100,19 @@ api = sly.Api.from_env()
 With next lines we will get values from `local.env`.
 
 ```python
-PROJECT_ID = sly.env.project_id()
-DATASET_ID = sly.env.dataset_id()
+project_id = sly.env.project_id()
+dataset_id = sly.env.dataset_id()
 ```
 
 By using these IDs, we can retrieve the project metadata and annotations, and define the values needed for the following operations.
 
 ```python
-PROJECT_META_JSON = api.project.get_meta(PROJECT_ID)
-PROJECT_META = sly.ProjectMeta.from_json(data=PROJECT_META_JSON)
+project_meta_json = api.project.get_meta(project_id)
+project_meta = sly.ProjectMeta.from_json(data=project_meta_json)
 
 key_id_map = sly.KeyIdMap()
 
-pcd_entities = api.pointcloud_episode.get_list(DATASET_ID)
-pcd_entity_id = pcd_entities[0][0]  # first entity id
-pcd_ep_ann_json = api.pointcloud_episode.annotation.download(DATASET_ID)
-pcd_ep_ann = sly.PointcloudEpisodeAnnotation.from_json(
-    data=pcd_ep_ann_json, project_meta=PROJECT_META, key_id_map=key_id_map
-)
-project_classes = PROJECT_META.obj_classes
-project_tag_metas = PROJECT_META.tag_metas
+pcd_ep_ann_json = api.pointcloud_episode.annotation.download(dataset_id)
 ```
 
 ### **Create new tag metadata**
@@ -124,94 +120,127 @@ project_tag_metas = PROJECT_META.tag_metas
 To create a new tag, you need to first define a tag metadata. This includes specifying the tag name, type, the objects to which it can be added, and the possible values. This base information will be used to create the actual tags.
 
 ```python
-new_tag_meta = sly.TagMeta(
-    "Tram",
-    sly.TagValueType.ONEOF_STRING,
-    applicable_to=sly.TagApplicableTo.OBJECTS_ONLY,
-    possible_values=["city", "suburb"],
-)
+tag_name = "Car"
+tag_values = ["car_1", "car_2"]
+
+if not project_meta.tag_metas.has_key(tag_name):
+    new_tag_meta = sly.TagMeta(
+        tag_name,
+        sly.TagValueType.ONEOF_STRING,
+        applicable_to=sly.TagApplicableTo.OBJECTS_ONLY,
+        possible_values=tag_values,
+    )
 ```
 
-### **Recreate the source project metadata with new tag metadata**
-
-If a tag metadata with the same name already exists in the project metadata, this step will be skipped.
+Then recreate the source project metadata with new tag metadata.
 
 ```python
-existing_tag_meta = project_tag_metas.get(new_tag_meta.name)
-if existing_tag_meta is None:
-    new_tags_collection = project_tag_metas.add(new_tag_meta)
-    new_project_meta = sly.ProjectMeta(tag_metas=new_tags_collection, obj_classes=project_classes)
-    api.project.update_meta(PROJECT_ID, new_project_meta)
-else:
-    new_tag_meta = existing_tag_meta
+    new_tags_collection = project_meta.tag_metas.add(new_tag_meta)
+    new_project_meta = sly.ProjectMeta(
+        tag_metas=new_tags_collection, obj_classes=project_meta.obj_classes
+    )
+    api.project.update_meta(project_id, new_project_meta)
 ```
 
 New tag metadatas added
 
-<img width="1280" alt="tags_meta" src="https://user-images.githubusercontent.com/57998637/231448616-b81d7f51-bd37-40d8-9caa-87a9207e43b9.png">
+<img width="1280" alt="tag_meta_created" src="https://user-images.githubusercontent.com/57998637/232045203-f9d16210-fc4d-48ed-a71e-33b0c45f1fab.png">
 
-### **Create new tag with value**
-
-You can create a tag using the previously created tag metadata, which can have a value and can be assigned to the defined frames. Once you have created the new tag, you can then create a tag Collection with the new tag. This will enable you to recreate certain Objects but with the new tag.
+Right after updating the metadata, we need to obtain added metadata on the previous step to get the IDs in the next steps.
 
 ```python
-new_tag = sly.PointcloudEpisodeTag(
-    meta=new_tag_meta,
-    value="suburb",
-)
-new_tag_collection = PointcloudEpisodeTagCollection([new_tag])
+    new_prject_meta_json = api.project.get_meta(project_id)
+    new_project_meta = sly.ProjectMeta.from_json(data=new_prject_meta_json)
+    new_tag_meta = new_project_meta.tag_metas.get(new_tag_meta.name)
 ```
+
+### **Or use existing tag metadata**
+
+If a tag with the `tag_name` already exists in the metadata, we could just use it if it fits our requirements.
+
+```python
+else:
+    new_tag_meta = project_meta.tag_metas.get(tag_name)
+    if sorted(new_tag_meta.possible_values) != sorted(tag_values):
+        sly.logger.warning(
+            f"Tag [{new_tag_meta.name}] already exists, but with another values: {new_tag_meta.possible_values}"
+        )
+```
+
+In case this tag doesn't meet our requirements, it would be better to create a new one with a different name. On the other hand, we could update the tag values.
+
+### **Create new tag with value and add to objects**
+
+When you pass information from tag metadata using its ID to the object, a new tag is created and appended.
+
+If you want to add a tag with value, you can define the `value` argument with possible values.
 
 If you want to add a tag to frames, you can define the `frame_range` argument.
 
 ```python
-new_tag = sly.PointcloudEpisodeTag(
-    meta=new_tag_meta,
-    value="suburb",
-    frame_range=[12, 13] # this one
-)
+project_objects = pcd_ep_ann_json.get("objects")
+tag_frames = [0, 26]
+created_tag_ids = {}
+
+for object in project_objects:
+    if object["classTitle"] == "Car":
+        tag_id = api.pointcloud_episode.object.tag.add(
+            new_tag_meta.sly_id, object["id"], value="car_1", frame_range=tag_frames
+        )
+        created_tag_ids[object["id"]] = tag_id
 ```
 
-### **Recreate all objects that meet the requirements**
-
-All objects that belong to the "Tram" class will be processed with a new tag.
-In this case, if you try to add tags to the source object using `object.add_tag`, you will receive a duplication error. That's why we recreate the object with only the new tags for further updating of annotations.
-
-```python
-new_objects_list = []
-
-for object in pcd_ep_ann.objects:
-    if object.obj_class.name == "Tram":
-        new_obj = object.clone(tags=new_tag_collection)
-        new_objects_list.append(new_obj)
-```
-
-If you want to skip objects that already have a particular tag, you should retrieve all the tags for that object and check if the desired tag already exists. If it does, then you can skip that object and move on to the next one.
-
-```python
-for object in pcd_ep_ann.objects:
-    object_tags = object.tags.items() # this one
-    has_this_tag = any(tag.name == new_tag.name for tag in object_tags) # this one
-    if object.obj_class.name == "Tram" and not has_this_tag: # this one
-        new_obj = object.clone(tags=new_tag_collection)
-        new_objects_list.append(new_obj)
-```
-
-### **Update annotations**
-
-To update the current annotations in PCE, you need to first create a new annotation based on the original. This new annotation should not overwrite all the information, but only the information that needs to be updated.
-
-```python
-new_pcd_ann = pcd_ep_ann.clone(objects=new_objects_list)
-
-api.pointcloud_episode.tag.append_to_objects(
-    entity_id=pcd_entity_id,
-    project_id=PROJECT_ID,
-    objects=new_pcd_ann.objects,
-    key_id_map=key_id_map,
-)
-```
+`created_tag_ids` uses to store IDs for the following operations.
 
 Visualization in Labeling Tool with new tags
 
-<img width="1280" alt="tool_after" src="https://user-images.githubusercontent.com/57998637/231228485-67d1f919-d5b5-4647-b7e4-e8389f0743b2.png">
+<img width="1280" alt="tad_added" src="https://user-images.githubusercontent.com/57998637/232045207-5a52b32c-c766-4219-8713-d18e7174432a.png">
+
+You could more precisely define `tag_frames` in your dataset using the following example:
+
+replace line number 46 of source code with this:
+
+```python
+project_frames = pcd_ep_ann_json.get("frames")
+```
+
+insert on line number 51 of source code this:
+
+```python
+        frame_range = []
+        for frame in project_frames:
+            for figure in frame["figures"]:
+                if figure["objectId"] == object["id"]:
+                    frame_range.append(frame["index"])
+        frame_range = frame_range[0:1] + frame_range[-1:]
+```
+
+You will most likely need to modify this example to more accurately define the objects. It is only provided to make it faster and easier to understand where and with what information to interact.
+
+### **Update tag value**
+
+Also, if you need to correct tag values, you can easily do so as follows:
+
+```python
+tag_id_to_operate = created_tag_ids.get(project_objects[0]["id"])
+
+api.pointcloud_episode.object.tag.update(tag_id_to_operate, "car_2")
+```
+
+In our example, we took the first annotated object and the tag assigned to it in the previous step.
+
+You can use a different approach to obtain information about objects, their tags, and the values of those tags according to your goal.
+
+<img width="1280" alt="tag_updated" src="https://user-images.githubusercontent.com/57998637/232045213-477829d1-f9ee-4a39-9551-931bc9034111.png">
+
+### **Delete tag**
+
+To remove a tag, all you need is its ID.
+
+```python
+api.pointcloud_episode.object.tag.remove(tag_id_to_operate)
+```
+
+<img width="1280" alt="tagg_removed" src="https://user-images.githubusercontent.com/57998637/232045214-17174d7b-f84b-433e-ae88-1930eedb451b.png">
+
+Please note that you are only deleting the tag from the object. To remove a tag from the project (`TagMeta`), you need to use other SDK methods.
